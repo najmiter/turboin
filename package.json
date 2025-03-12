@@ -1,16 +1,18 @@
 {
-  "name": "turboin",
+  "name": "quicktab-search",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "tsc && vite build && node scripts/post-build.js",
+    "preview": "vite preview",
+    "copy-assets": "mkdir -p dist/icons && cp -R src/icons/* dist/icons/ && cp manifest.json dist/"
   },
   "devDependencies": {
     "typescript": "~5.7.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "@types/chrome": "^0.0.248"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.13",

@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "QuickTab Search",
+  "version": "1.0.0",
+  "description": "Search and navigate between tabs and bookmarks quickly",
+  "permissions": ["tabs", "bookmarks", "storage", "commands", "history"],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "icons/icon.jpg",
+      "48": "icons/icon.jpg",
+      "128": "icons/icon.jpg"
+    },
+    "default_title": "QuickTab Search"
+  },
+  "commands": {
+    "open-search": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Open tab search"
+    }
+  },
+  "icons": {
+    "16": "icons/icon.jpg",
+    "48": "icons/icon.jpg",
+    "128": "icons/icon.jpg"
+  }
+}
