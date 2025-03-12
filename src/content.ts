@@ -19,7 +19,29 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 function setupKeyboardMonitor() {
-  port = chrome.runtime.connect({ name: 'keyboardMonitor' });
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 5;
+
+  const connectPort = () => {
+    try {
+      port = chrome.runtime.connect({ name: 'keyboardMonitor' });
+      reconnectAttempts = 0;
+
+      port.onDisconnect.addListener(() => {
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttempts++;
+          setTimeout(connectPort, 1000 * reconnectAttempts);
+        }
+      });
+    } catch (error) {
+      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts++;
+        setTimeout(connectPort, 1000 * reconnectAttempts);
+      }
+    }
+  };
+
+  connectPort();
 
   document.addEventListener('keydown', (e) => {
     const modifiers: string[] = [];
@@ -46,10 +68,16 @@ function setupKeyboardMonitor() {
 
     const shortcut = [...modifiers, key].join('+');
 
-    port.postMessage({
-      type: 'keydown',
-      shortcut: shortcut,
-    });
+    try {
+      if (port) {
+        port.postMessage({
+          type: 'keydown',
+          shortcut: shortcut,
+        });
+      }
+    } catch {
+      connectPort();
+    }
   });
 }
 
@@ -318,11 +346,9 @@ function updateResultSelection(index: number, selected: boolean) {
   if (!item) return;
 
   if (selected) {
-    item.style.backgroundColor = '#4a5568';
-    item.style.borderLeftColor = '#3182ce';
+    item.classList.add('turboin__selected');
   } else {
-    item.style.backgroundColor = 'transparent';
-    item.style.borderLeftColor = 'transparent';
+    item.classList.remove('turboin__selected');
   }
 }
 
@@ -573,41 +599,11 @@ function createResultItem(
   onClick: () => void
 ): HTMLDivElement {
   const item = document.createElement('div');
-  item.style.cssText = `
-    padding: 12px 16px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    border-left: 3px solid transparent;
-    transition: background-color 0.2s;
-    position: relative;
-    padding-left: 36px;  /* Increased to accommodate favicon */
-  `;
+  item.className = 'turboin__search-result-item';
 
   if (type === 'history') {
     item.style.opacity = '0.8';
   }
-
-  let hoverTimeout: number;
-  item.addEventListener('mouseover', () => {
-    clearTimeout(hoverTimeout);
-    hoverTimeout = setTimeout(() => {
-      if (document.hasFocus()) {
-        const index = resultItems.indexOf(item);
-        if (index !== -1) {
-          updateResultSelection(selectedResultIndex, false);
-
-          selectedResultIndex = index;
-          updateResultSelection(selectedResultIndex, true);
-        }
-      }
-    }, 50) as unknown as number;
-  });
-
-  item.addEventListener('mouseout', () => {
-    clearTimeout(hoverTimeout);
-  });
 
   item.addEventListener('click', onClick);
 
@@ -685,3 +681,28 @@ function getFaviconUrl(
     return '';
   }
 }
+
+const style = document.createElement('style');
+style.textContent = `
+  .turboin__search-result-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-left: 3px solid transparent;
+    position: relative;
+    padding-left: 36px;
+  }
+
+  .turboin__search-result-item:hover {
+    background-color: #4a5568;
+    border-left-color: #3182ce;
+  }
+
+  .turboin__search-result-item.turboin__selected {
+    background-color: #4a5568;
+    border-left-color: #3182ce;
+  }
+`;
+document.head.appendChild(style);
