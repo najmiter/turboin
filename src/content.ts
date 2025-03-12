@@ -2,6 +2,11 @@ let searchContainer: HTMLDivElement | null = null;
 let selectedResultIndex: number = 0;
 let resultItems: HTMLDivElement[] = [];
 let searchInput: HTMLInputElement | null = null;
+let isSearchOpen: boolean = false;
+
+let documentKeydownListener: ((e: KeyboardEvent) => void) | null = null;
+let documentClickListener: ((e: MouseEvent) => void) | null = null;
+let documentWheelListener: ((e: WheelEvent) => void) | null = null;
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'openSearch') {
@@ -10,9 +15,14 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 function openSearchUI() {
+  isSearchOpen = true;
+
   if (searchContainer) {
-    searchInput?.focus();
     searchContainer.style.display = 'flex';
+    if (searchInput) {
+      setTimeout(() => searchInput?.focus(), 0);
+    }
+    addEventBlockers();
     return;
   }
 
@@ -67,7 +77,7 @@ function openSearchUI() {
   searchContainer.appendChild(modal);
   document.body.appendChild(searchContainer);
 
-  searchInput.focus();
+  setTimeout(() => searchInput?.focus(), 0);
 
   selectedResultIndex = 0;
   resultItems = [];
@@ -89,12 +99,95 @@ function openSearchUI() {
     }
   });
 
-  document.addEventListener('keydown', handleKeyDown);
+  addEventBlockers();
+}
+
+function addEventBlockers() {
+  removeEventBlockers();
+
+  documentKeydownListener = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      hideSearchUI();
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      e.stopPropagation();
+      selectNextResult();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      selectPreviousResult();
+    } else if (e.key === 'Enter' && resultItems.length > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      resultItems[selectedResultIndex].click();
+    } else {
+      const target = e.target as HTMLElement;
+      if (target !== searchInput) {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput?.focus();
+      }
+    }
+  };
+
+  documentClickListener = (e: MouseEvent) => {
+    if (!searchContainer?.contains(e.target as Node) && isSearchOpen) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  documentWheelListener = (e: WheelEvent) => {
+    if (isSearchOpen) {
+      const resultsContainer = searchContainer?.querySelector(
+        'div > div:last-child'
+      );
+      if (resultsContainer && !resultsContainer.contains(e.target as Node)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  };
+
+  document.addEventListener('keydown', documentKeydownListener, true);
+  document.addEventListener('click', documentClickListener, true);
+  document.addEventListener('wheel', documentWheelListener, {
+    capture: true,
+    passive: false,
+  });
+
+  if (document.body.style.overflow !== 'hidden' && isSearchOpen) {
+    document.body.style.setProperty('overflow', 'hidden', 'important');
+  }
+}
+
+function removeEventBlockers() {
+  if (documentKeydownListener) {
+    document.removeEventListener('keydown', documentKeydownListener, true);
+    documentKeydownListener = null;
+  }
+  if (documentClickListener) {
+    document.removeEventListener('click', documentClickListener, true);
+    documentClickListener = null;
+  }
+  if (documentWheelListener) {
+    document.removeEventListener('wheel', documentWheelListener, true as any);
+    documentWheelListener = null;
+  }
+
+  document.body.style.removeProperty('overflow');
 }
 
 function hideSearchUI() {
   if (searchContainer) {
     searchContainer.style.display = 'none';
+    isSearchOpen = false;
+    removeEventBlockers();
   }
 }
 
