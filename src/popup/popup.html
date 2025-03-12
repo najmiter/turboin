@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turboin Settings</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+        width: 300px;
+        padding: 16px;
+        background-color: #2d3748;
+        color: white;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: #edf2f7;
+      }
+
+      .setting-group {
+        margin-bottom: 20px;
+      }
+
+      .setting-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #e2e8f0;
+      }
+
+      .shortcut-input {
+        width: 100%;
+        padding: 8px;
+        background-color: #4a5568;
+        border: 1px solid #718096;
+        border-radius: 4px;
+        color: white;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .shortcut-input:focus {
+        outline: none;
+        border-color: #3182ce;
+        box-shadow: 0 0 0 1px #3182ce;
+      }
+
+      .hint {
+        color: #a0aec0;
+        font-size: 12px;
+        margin-top: 6px;
+      }
+
+      .button-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      button {
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        background-color: #4a5568;
+        color: white;
+        transition: background-color 0.2s;
+      }
+
+      button:hover {
+        background-color: #718096;
+      }
+
+      button.primary {
+        background-color: #3182ce;
+        color: white;
+      }
+
+      button.primary:hover {
+        background-color: #2c5282;
+      }
+
+      .success-message {
+        color: #48bb78;
+        font-size: 14px;
+        margin-top: 16px;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .success-message.visible {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Turboin Settings</h1>
+
+    <div class="setting-group">
+      <label for="shortcut" class="setting-label">Search Shortcut</label>
+      <input
+        type="text"
+        id="shortcut"
+        class="shortcut-input"
+        placeholder="Click to record shortcut"
+        readonly
+      />
+      <div class="hint">
+        Press the desired keyboard shortcut combination.
+        <br />Example: Ctrl+Shift+K or Command+Shift+K
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="reset">Reset to Default</button>
+      <button id="save" class="primary">Save</button>
+    </div>
+
+    <div id="successMessage" class="success-message">Settings saved!</div>
+
+    <script src="../popup.js" type="module"></script>
+  </body>
+</html>

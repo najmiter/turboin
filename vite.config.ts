@@ -7,9 +7,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        // main: resolve(__dirname, 'index.html'),
         background: resolve(__dirname, 'src/background.ts'),
         content: resolve(__dirname, 'src/content.ts'),
+        popup: resolve(__dirname, 'src/popup/popup.ts'),
       },
       output: {
         entryFileNames: (chunkInfo) => {

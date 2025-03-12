@@ -6,20 +6,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const iconDir = path.join(distDir, 'icons');
+const popupDir = path.join(distDir, 'src/popup');
 
 async function copyAssets() {
   try {
-    // Create icons directory if it doesn't exist
     await mkdir(iconDir, { recursive: true });
+    await mkdir(popupDir, { recursive: true });
 
-    // Copy manifest file to dist
     await copyFile(
       path.join(rootDir, 'manifest.json'),
       path.join(distDir, 'manifest.json')
     );
+
     await copyFile(
-      path.join(rootDir, 'src/icons', 'icon.jpg'),
-      path.join(iconDir, 'icon.jpg')
+      path.join(rootDir, 'src/icons', 'icon.png'),
+      path.join(iconDir, 'icon.png')
+    );
+
+    await copyFile(
+      path.join(rootDir, 'src/popup', 'popup.html'),
+      path.join(popupDir, 'popup.html')
     );
 
     console.log('Extension assets copied successfully.');

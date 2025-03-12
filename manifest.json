@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "QuickTab Search",
+  "name": "turboin",
   "version": "1.0.0",
   "description": "Search and navigate between tabs and bookmarks quickly",
   "permissions": ["tabs", "bookmarks", "storage", "commands", "history"],
@@ -16,11 +16,12 @@
   ],
   "action": {
     "default_icon": {
-      "16": "icons/icon.jpg",
-      "48": "icons/icon.jpg",
-      "128": "icons/icon.jpg"
+      "16": "icons/icon.png",
+      "48": "icons/icon.png",
+      "128": "icons/icon.png"
     },
-    "default_title": "QuickTab Search"
+    "default_title": "Turboin",
+    "default_popup": "src/popup/popup.html"
   },
   "commands": {
     "open-search": {
@@ -32,8 +33,8 @@
     }
   },
   "icons": {
-    "16": "icons/icon.jpg",
-    "48": "icons/icon.jpg",
-    "128": "icons/icon.jpg"
+    "16": "icons/icon.png",
+    "48": "icons/icon.png",
+    "128": "icons/icon.png"
   }
 }

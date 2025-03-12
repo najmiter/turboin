@@ -1,3 +1,7 @@
+import { SearchResult } from './types/search';
+
+let port: chrome.runtime.Port;
+
 let searchContainer: HTMLDivElement | null = null;
 let selectedResultIndex: number = 0;
 let resultItems: HTMLDivElement[] = [];
@@ -13,6 +17,43 @@ chrome.runtime.onMessage.addListener((message) => {
     openSearchUI();
   }
 });
+
+function setupKeyboardMonitor() {
+  port = chrome.runtime.connect({ name: 'keyboardMonitor' });
+
+  document.addEventListener('keydown', (e) => {
+    const modifiers: string[] = [];
+    if (e.ctrlKey) modifiers.push('Ctrl');
+    if (e.shiftKey) modifiers.push('Shift');
+    if (e.altKey) modifiers.push('Alt');
+    if (e.metaKey)
+      modifiers.push(navigator.platform.includes('Mac') ? 'Command' : 'Meta');
+
+    if (modifiers.length === 0) return;
+
+    let key = e.key;
+
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(key)) {
+      return;
+    }
+
+    if (key === ' ') key = 'Space';
+    else if (key === 'ArrowUp') key = 'Up';
+    else if (key === 'ArrowDown') key = 'Down';
+    else if (key === 'ArrowLeft') key = 'Left';
+    else if (key === 'ArrowRight') key = 'Right';
+    else if (key.length === 1) key = key.toUpperCase();
+
+    const shortcut = [...modifiers, key].join('+');
+
+    port.postMessage({
+      type: 'keydown',
+      shortcut: shortcut,
+    });
+  });
+}
+
+setupKeyboardMonitor();
 
 function openSearchUI() {
   isSearchOpen = true;
@@ -301,19 +342,6 @@ function ensureResultVisible(element: HTMLElement) {
   } else if (elementRect.top < containerRect.top) {
     resultsContainer.scrollTop -= containerRect.top - elementRect.top;
   }
-}
-
-interface SearchResult {
-  type: 'tab' | 'bookmark' | 'history' | 'header' | 'no-results';
-  title: string;
-  url?: string;
-  tabId?: number;
-  windowId?: number;
-  relevance: number;
-  element?: HTMLDivElement;
-  visitCount?: number;
-  lastVisitTime?: number;
-  favIconUrl?: string;
 }
 
 function performSearch(query: string, resultsContainer: HTMLDivElement) {
