@@ -2,10 +2,9 @@ let activeTabs: chrome.tabs.Tab[] = [];
 let customShortcut = '';
 
 async function loadSettings() {
-  const storage = await chrome.storage.sync.get('settings');
-  if (storage.settings?.shortcut) {
-    customShortcut = storage.settings.shortcut;
-    console.log('Loaded custom shortcut:', customShortcut);
+  const storage = await chrome.storage.sync.get('turboin_settings');
+  if (storage.turboin_settings?.shortcut) {
+    customShortcut = storage.turboin_settings.shortcut;
   }
 }
 

@@ -260,29 +260,28 @@ function hideSearchUI() {
   }
 }
 
-function handleKeyDown(e: KeyboardEvent) {
-  console.log(e.key);
-  if (e.key === 'Escape') {
-    hideSearchUI();
-    return;
-  }
+// function handleKeyDown(e: KeyboardEvent) {
+//   if (e.key === 'Escape') {
+//     hideSearchUI();
+//     return;
+//   }
 
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    selectNextResult();
-  }
+//   if (e.key === 'ArrowDown') {
+//     e.preventDefault();
+//     selectNextResult();
+//   }
 
-  if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    selectPreviousResult();
-  }
+//   if (e.key === 'ArrowUp') {
+//     e.preventDefault();
+//     selectPreviousResult();
+//   }
 
-  if (e.key === 'Enter' && resultItems.length > 0) {
-    e.preventDefault();
+//   if (e.key === 'Enter' && resultItems.length > 0) {
+//     e.preventDefault();
 
-    resultItems[selectedResultIndex].click();
-  }
-}
+//     resultItems[selectedResultIndex].click();
+//   }
+// }
 
 function calculateRelevanceScore(
   query: string,
