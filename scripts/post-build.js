@@ -28,6 +28,11 @@ async function copyAssets() {
       path.join(popupDir, 'popup.html')
     );
 
+    await copyFile(
+      path.join(rootDir, 'src/popup', 'style.css'),
+      path.join(popupDir, 'style.css')
+    );
+
     console.log('Extension assets copied successfully.');
   } catch (error) {
     console.error('Error copying extension assets:', error);
