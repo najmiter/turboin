@@ -1,4 +1,5 @@
-import { Settings, DEFAULT_SETTINGS } from '../types/settings';
+import { Settings } from '@/types/settings';
+import { DEFAULT_SETTINGS } from '../utils/constant';
 
 const shortcutInput = document.getElementById('shortcut') as HTMLInputElement;
 const saveButton = document.getElementById('save') as HTMLButtonElement;
@@ -8,8 +9,8 @@ const successMessage = document.getElementById(
 ) as HTMLDivElement;
 
 async function initializeSettings() {
-  const storage = await chrome.storage.sync.get('settings');
-  const settings: Settings = storage.settings || DEFAULT_SETTINGS;
+  const storage = await chrome.storage.sync.get('turboin_settings');
+  const settings: Settings = storage.turboin_settings || DEFAULT_SETTINGS;
 
   shortcutInput.value = settings.shortcut;
 }
@@ -62,7 +63,7 @@ saveButton.addEventListener('click', async () => {
     shortcut: shortcutInput.value,
   };
 
-  await chrome.storage.sync.set({ settings });
+  await chrome.storage.sync.set({ turboin_settings: settings });
 
   successMessage.classList.add('visible');
   setTimeout(() => {

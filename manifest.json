@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "turboin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Search and navigate between tabs, history, and bookmarks quickly",
   "permissions": ["tabs", "bookmarks", "storage", "commands", "history"],
   "background": {
@@ -11,7 +11,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content.js"]
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [

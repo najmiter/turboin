@@ -1,4 +1,4 @@
-import { SearchResult } from './types/search';
+import { SearchResult } from '@/types/search';
 
 let port: chrome.runtime.Port;
 

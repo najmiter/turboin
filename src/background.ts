@@ -1,3 +1,5 @@
+import { setupHeartbeat } from './utils/heartbeat';
+
 let activeTabs: chrome.tabs.Tab[] = [];
 let customShortcut = '';
 
@@ -104,3 +106,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.tabs.create({ url: request.url });
   }
 });
+
+setupHeartbeat();
