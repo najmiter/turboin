@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "turboin",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Search and navigate between tabs, history, and bookmarks quickly",
   "permissions": ["tabs", "bookmarks", "storage", "commands", "history"],
   "background": {
