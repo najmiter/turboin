@@ -3,6 +3,16 @@ import { setupHeartbeat } from './utils/heartbeat';
 let activeTabs: chrome.tabs.Tab[] = [];
 let customShortcut = '';
 
+function safelySendMessage(tabId: number, message: any) {
+  try {
+    chrome.tabs.sendMessage(tabId, message, (response) => {
+      if (chrome.runtime.lastError) {
+        // console.log(`Message send failed: ${chrome.runtime.lastError.message}`);
+      }
+    });
+  } catch {}
+}
+
 async function loadSettings() {
   const storage = await chrome.storage.sync.get('turboin_settings');
   if (storage.turboin_settings?.shortcut) {
@@ -22,7 +32,7 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === 'open-search') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'openSearch' });
+        safelySendMessage(tabs[0].id, { action: 'openSearch' });
       }
     });
   }
@@ -34,7 +44,7 @@ chrome.runtime.onConnect.addListener((port) => {
       if (msg.type === 'keydown' && msg.shortcut === customShortcut) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]?.id) {
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'openSearch' });
+            safelySendMessage(tabs[0].id, { action: 'openSearch' });
           }
         });
       }
@@ -82,11 +92,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           startTime: Date.now() - 30 * 24 * 60 * 60 * 1000,
         },
         (historyItems) => {
-          sendResponse({
-            tabs: matchingTabs,
-            bookmarks: bookmarks,
-            history: historyItems,
-          });
+          try {
+            sendResponse({
+              tabs: matchingTabs,
+              bookmarks: bookmarks,
+              history: historyItems,
+            });
+          } catch {}
         }
       );
     });
