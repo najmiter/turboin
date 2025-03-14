@@ -1,6 +1,7 @@
 import { SearchResult } from '@/types/search';
 
-let port: chrome.runtime.Port;
+let port: chrome.runtime.Port | null = null;
+let isPortConnected = false;
 
 let searchContainer: HTMLDivElement | null = null;
 let selectedResultIndex: number = 0;
@@ -22,19 +23,45 @@ function setupKeyboardMonitor() {
   let reconnectAttempts = 0;
   const MAX_RECONNECT_ATTEMPTS = 5;
 
+  let isPageVisible = !document.hidden;
+
+  document.addEventListener('visibilitychange', () => {
+    isPageVisible = !document.hidden;
+
+    if (
+      isPageVisible &&
+      !isPortConnected &&
+      reconnectAttempts < MAX_RECONNECT_ATTEMPTS
+    ) {
+      reconnectAttempts = 0;
+      connectPort();
+    }
+  });
+
   const connectPort = () => {
     try {
+      if (port) {
+        try {
+          port.disconnect();
+        } catch (e) {}
+      }
+
       port = chrome.runtime.connect({ name: 'keyboardMonitor' });
+      isPortConnected = true;
       reconnectAttempts = 0;
 
       port.onDisconnect.addListener(() => {
-        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        isPortConnected = false;
+
+        if (isPageVisible && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           reconnectAttempts++;
           setTimeout(connectPort, 1000 * reconnectAttempts);
         }
       });
     } catch (error) {
-      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      isPortConnected = false;
+
+      if (isPageVisible && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts++;
         setTimeout(connectPort, 1000 * reconnectAttempts);
       }
@@ -44,6 +71,14 @@ function setupKeyboardMonitor() {
   connectPort();
 
   document.addEventListener('keydown', (e) => {
+    if (!isPortConnected) {
+      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts = 0;
+        connectPort();
+      }
+      return;
+    }
+
     const modifiers: string[] = [];
     if (e.ctrlKey) modifiers.push('Ctrl');
     if (e.shiftKey) modifiers.push('Shift');
@@ -68,14 +103,26 @@ function setupKeyboardMonitor() {
 
     const shortcut = [...modifiers, key].join('+');
 
-    try {
-      if (port) {
+    if (port && isPortConnected) {
+      try {
         port.postMessage({
           type: 'keydown',
           shortcut: shortcut,
         });
+      } catch (err) {
+        isPortConnected = false;
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttempts = 0;
+          connectPort();
+        }
       }
-    } catch {
+    }
+  });
+
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      isPortConnected = false;
+      reconnectAttempts = 0;
       connectPort();
     }
   });
