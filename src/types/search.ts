@@ -10,3 +10,9 @@ export interface SearchResult {
   lastVisitTime?: number;
   favIconUrl?: string;
 }
+
+export interface Command {
+  name: string;
+  description: string;
+  execute: () => void;
+}

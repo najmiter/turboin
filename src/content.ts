@@ -1,4 +1,10 @@
 import { SearchResult } from '@/types/search';
+import {
+  getAvailableCommands,
+  isCommand,
+  findCommand,
+  findMatchingCommands,
+} from './utils/commands';
 
 let port: chrome.runtime.Port | null = null;
 let isPortConnected = false;
@@ -182,6 +188,9 @@ function openSearchUI() {
   `;
 
   const resultsContainer = document.createElement('div');
+  resultsContainer.innerHTML =
+    '<p style="text-align: center; color: #a0aec0; margin-block: 10px;">Search a query or command (i.e., <code>!calendar</code>)...</p>';
+
   resultsContainer.style.cssText = `
     max-height: 400px;
     overflow-y: auto;
@@ -203,7 +212,8 @@ function openSearchUI() {
     if (query.length > 0) {
       performSearch(query, resultsContainer);
     } else {
-      resultsContainer.innerHTML = '';
+      resultsContainer.innerHTML =
+        '<p style="text-align: center; color: #a0aec0; margin-block: 10px;">Search a query or command (i.e., <code>!calendar</code>)...</p>';
       resultItems = [];
       selectedResultIndex = 0;
     }
@@ -394,6 +404,86 @@ function ensureResultVisible(element: HTMLElement) {
 }
 
 function performSearch(query: string, resultsContainer: HTMLDivElement) {
+  if (isCommand(query)) {
+    const commands = getAvailableCommands(hideSearchUI);
+    const matchingCommands = findMatchingCommands(query, commands);
+
+    resultsContainer.innerHTML = '';
+    resultItems = [];
+    selectedResultIndex = 0;
+
+    if (matchingCommands.length > 0) {
+      const commandHeader = document.createElement('div');
+      commandHeader.textContent = 'Commands';
+      commandHeader.style.cssText = `
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #a0aec0;
+        text-transform: uppercase;
+      `;
+      resultsContainer.appendChild(commandHeader);
+
+      matchingCommands.forEach((command) => {
+        const commandItem = document.createElement('div');
+        commandItem.className =
+          'turboin__search-result-item turboin__command-item';
+
+        const commandTitle = document.createElement('div');
+        commandTitle.textContent = `!${command.name}`;
+        commandTitle.style.cssText = `
+          color: white;
+          font-size: 14px;
+          font-weight: bold;
+        `;
+
+        const commandDesc = document.createElement('div');
+        commandDesc.textContent = command.description;
+        commandDesc.style.cssText = `
+          color: #cbd5e0;
+          font-size: 12px;
+        `;
+
+        const iconElement = document.createElement('div');
+        iconElement.textContent = '⚡';
+        iconElement.style.cssText = `
+          position: absolute;
+          left: 12px;
+          top: 14px;
+          font-size: 14px;
+        `;
+
+        commandItem.appendChild(iconElement);
+        commandItem.appendChild(commandTitle);
+        commandItem.appendChild(commandDesc);
+
+        commandItem.addEventListener('click', () => {
+          command.execute();
+        });
+
+        resultsContainer.appendChild(commandItem);
+        resultItems.push(commandItem);
+      });
+
+      if (resultItems.length > 0) {
+        selectedResultIndex = 0;
+        updateResultSelection(0, true);
+      }
+
+      return;
+    } else {
+      const noCommand = document.createElement('div');
+      noCommand.textContent = `Command "${query}" not found`;
+      noCommand.style.cssText = `
+        padding: 16px;
+        color: #a0aec0;
+        text-align: center;
+      `;
+      resultsContainer.appendChild(noCommand);
+      return;
+    }
+  }
+
   chrome.runtime.sendMessage({ action: 'search', query }, (results) => {
     resultsContainer.innerHTML = '';
     resultItems = [];
@@ -726,6 +816,117 @@ style.textContent = `
   .turboin__search-result-item.turboin__selected {
     background-color: #4a5568;
     border-left-color: #3182ce;
+  }
+  
+  .turboin__command-item {
+    background-color: #2d3748;
+    border-left-color: #ed8936;
+  }
+  
+  .turboin__command-item:hover,
+  .turboin__command-item.turboin__selected {
+    background-color: #3d4a5c;
+    border-left-color: #ed8936;
+  }
+  
+  .turboin-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2147483647;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .turboin-modal-content {
+    background-color: #2d3748;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    width: 320px;
+    height: 410px;
+    max-width: 90%;
+    overflow: hidden;
+  }
+  
+  .turboin-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #3182ce;
+    padding: 12px 16px;
+    color: white;
+  }
+  
+  .turboin-calendar-header h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  .turboin-close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  
+  .turboin-calendar-container {
+    padding: 16px;
+  }
+  
+  .turboin-month-year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    color: white;
+  }
+  
+  .turboin-month-nav {
+    background: #4a5568;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .turboin-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  
+  .turboin-calendar-day-header {
+    text-align: center;
+    font-weight: bold;
+    color: #a0aec0;
+    font-size: 12px;
+    padding: 8px 0;
+  }
+  
+  .turboin-calendar-day {
+    text-align: center;
+    padding: 8px 0;
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+  }
+  
+  .turboin-empty-day {
+    visibility: hidden;
+  }
+  
+  .turboin-current-day {
+    background-color: #3182ce;
+    font-weight: bold;
   }
 `;
 document.head.appendChild(style);
